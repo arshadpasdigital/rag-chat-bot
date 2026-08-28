@@ -1,6 +1,6 @@
 class ApiResponse {
-	static success(
-		data: Record<any, any> | null = null,
+	static success<T>(
+		data: T = null as T,
 		statusCode: number = 200,
 		message: string = 'Success',
 	) {
@@ -14,31 +14,34 @@ class ApiResponse {
 	}
 
 	static error(
-		error: Error | null = null,
+		error: unknown = null,
 		statusCode: number = 400,
 		message: string = 'Error',
+		details?: unknown,
 	) {
 		return {
 			success: false,
 			message,
 			statusCode,
-			error,
+			error: error instanceof Error ? { name: error.name, message: error.message } : error,
+			...(details === undefined ? {} : { details }),
 			timestamp: new Date().toISOString(),
 		};
 	}
 
-	static validationError(error: Error | null = null) {
+	static validationError(error: unknown = null, details?: unknown) {
 		return {
 			success: false,
 			message: 'Validation Failed',
-			error,
+			error: error instanceof Error ? { name: error.name, message: error.message } : error,
+			...(details === undefined ? {} : { details }),
 			statusCode: 400,
 			timestamp: new Date().toISOString(),
 		};
 	}
 
 	static paginated(
-		data: Record<any, any> | null = null,
+		data: unknown = null,
 		page: number,
 		limit: number,
 		total: number,

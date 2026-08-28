@@ -1,0 +1,194 @@
+name: rag-chat-bot
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/dockerfile
+    init: true
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+    volumes:
+      - ./gateway:/app
+      - gateway_node_modules:/app/node_modules
+      - ./proto:/app/proto:ro
+    command: ["bun", "--watch", "run", "src/app.ts"]
+    depends_on:
+      task-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - micro-service-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  task-service:
+    build:
+      context: .
+      dockerfile: task-service/dockerfile
+    init: true
+    restart: unless-stopped
+    expose:
+      - "50051"
+    environment:
+      NODE_ENV: development
+      PORT: 50501
+    volumes:
+      - ./task-service:/app
+      - task_service_node_modules:/app/node_modules
+      - ./proto:/app/proto:ro
+    command: ["bun", "--watch", "run", "src/app.ts"]
+    depends_on:
+      notification-service:
+        condition: service_healthy
+    networks:
+      - micro-service-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:50051/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/dockerfile
+    init: true
+    restart: unless-stopped
+    expose:
+      - "50052"
+    environment:
+      NODE_ENV: development
+      PORT: 50052
+      RABBITMQ_URL: "amqp://${RABBITMQ_DEFAULT_USER:-appuser}:${RABBITMQ_DEFAULT_PASS:-appsecret}@rabbitmq:5672/"
+    volumes:
+      - ./notification-service:/app
+      - notification_service_node_modules:/app/node_modules
+      - ./proto:/app/proto:ro
+    command: ["bun", "--watch", "run", "src/app.ts"]
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - micro-service-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:5052/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/dockerfile
+    init: true
+    restart: unless-stopped
+    env_file:
+      - ./auth-service/.env
+    environment:
+      NODE_ENV: development
+      PORT: 50053
+      MONGODB_URI: "mongodb://${MONGO_ROOT_USERNAME:-root}:${MONGO_ROOT_PASSWORD:-example}@mongo:27017/${MONGO_DATABASE:-sale-agent-db}?authSource=admin"
+      RABBITMQ_URL: "amqp://${RABBITMQ_DEFAULT_USER:-appuser}:${RABBITMQ_DEFAULT_PASS:-appsecret}@rabbitmq:5672/"
+    expose:
+      - "50053"
+    volumes:
+      - ./auth-service:/app
+      - auth_service_node_modules:/app/node_modules
+      - ./proto:/app/proto:ro
+    command: ["bun", "--watch", "run", "src/app.ts"]
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - micro-service-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:5053/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  mongo:
+    image: mongo:8.3.8
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-example}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-sale-agent-db}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - micro-service-net
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' | grep 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_ROOT_USERNAME:-root}:${MONGO_ROOT_PASSWORD:-example}@mongo:27017/${MONGO_DATABASE:-sale-agent-db}?authSource=admin"
+      ME_CONFIG_BASICAUTH_ENABLED: ${MONGO_EXPRESS_AUTH_ENABLED:-true}
+      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USERNAME:-mongoexpressuser}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-mongoexpresspass}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - micro-service-net
+
+  rabbitmq:
+    image: rabbitmq:4.3.5-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-appuser}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-appsecret}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST:-/}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - micro-service-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  auth_service_node_modules:
+  gateway_node_modules:
+  notification_service_node_modules:
+  task_service_node_modules:
+  mongo-data:
+  rabbitmq_data:
+
+networks:
+  micro-service-net:
+    driver: bridge

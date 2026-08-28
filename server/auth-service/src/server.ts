@@ -5,73 +5,71 @@ import express, {
 	type Response,
 } from 'express';
 import cors from 'cors';
-import path from 'node:path';
-import { ApiResponse } from './utils/apiResponse';
-import { createServer } from 'node:http';
+import helmet from 'helmet';
+import { createServer, type Server } from 'node:http';
+import { UserDependencies } from './user.dependencies';
+import { Database } from './lib/database';
+import { RabbitMq } from './lib/rabbitMq';
 import { handleExpressError } from './exceptions/handleExpress';
+import { ApiResponse } from './utils/apiResponse';
+import { env } from './utils/env';
 
-export const expressServer = (app: Express, PORT: number) => {
-	const server = createServer(app);
+export const createApp = (): Express => {
+	const app = express();
+	const userDependencies = new UserDependencies();
 
-	app.use(
-		cors({
-			origin: process.env.FRONTEND_APP_URL,
-			credentials: true,
-			methods: ['GET', 'POST', 'PUT', 'DELETE'],
-		}),
-	);
-	app.use(express.json({ limit: '10mb' }));
-	app.use(express.urlencoded({ limit: '10mb', extended: true }));
-	app.use('/asset', express.static(path.join(process.cwd(), 'public')));
+	app.disable('x-powered-by');
+	app.use(helmet());
+	app.use(cors({
+		origin: env.FRONTEND_APP_URL ?? true,
+		credentials: true,
+		methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+	}));
+	app.use(express.json({ limit: '1mb' }));
+	app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
-	app.get('/health', (_req: Request, res: Response, _next: NextFunction) => {
-		const health = {
+	app.get('/health', (_request: Request, response: Response, _next: NextFunction) => {
+		response.status(200).json(ApiResponse.success({
 			status: 'ok',
 			service: 'auth-service',
-			environment: process.env.NODE_ENV,
-			port: process.env.PORT,
+			environment: env.NODE_ENV,
 			timestamp: new Date().toISOString(),
 			uptime: process.uptime(),
-			memory: process.memoryUsage(),
-			version: process.env.npm_package_version || '1.0.0',
-		};
-		res.status(200).json(ApiResponse.success(health,200,'Auth-service health'));
+		}));
 	});
 
+	app.use(['/api/v1/auth', '/api/v1/users', '/auth', '/users'], userDependencies.router);
+
+	app.use((_request, response) => {
+		response.status(404).json(ApiResponse.error(null, 404, 'Route not found'));
+	});
 	app.use(handleExpressError);
-	server.listen(PORT,()=>{
-		console.log(`The Auth server is running at port => ${PORT}`)
-	})
+	return app;
+};
 
-	const gracefulShutdown = async (signal: string) => {
-            server.on("close", async () => {
-                console.info(`${signal} received, shut down gracefully..`);
-                try {
-                    // service with we do shutdown
-                    console.info("All connection closed, existing process");
-                    process.exit(0);
-                } catch (error: unknown) {
-                    const err = error instanceof Error ? error : { message: "Internal server error" };
-                    console.error(`Error during the gracefully shutdown `, err.message);
-                    process.exit(1)
-                }
-            })
+export const startServer = async (port: number): Promise<Server> => {
+	const database = Database.getInstance();
+	const rabbitMq = RabbitMq.getInstance();
+	try {
+		await database.openConnection(env.MONGODB_URI);
+		await rabbitMq.openConnection(env.RABBITMQ_URL);
+	} catch (error) {
+		await Promise.allSettled([database.closeConnection(), rabbitMq.closeConnection()]);
+		throw error;
+	}
+	const server = createServer(createApp());
+	server.listen(port, () => console.log(`The Auth server is running at port => ${port}`));
 
-            setTimeout(() => {
-                console.log("forcefully Shutdown")
-                process.exit(1)
-            }, 10000)
-        }
+	const shutdown = async (signal: string) => {
+		console.info(`${signal} received, shutting down gracefully`);
+		server.close(async () => {
+			await Promise.allSettled([database.closeConnection(), rabbitMq.closeConnection()]);
+			process.exit(0);
+		});
+		setTimeout(() => process.exit(1), 10_000).unref();
+	};
 
-        process.on("SIGINT", () => gracefulShutdown('SIGINT'))
-        process.on('SIGTERM', () => gracefulShutdown("SIGTERM"))
-
-        process.on("uncaughtException", (error) => {
-            console.error("Uncaught Exception:", error);
-            gracefulShutdown("uncaughtException");
-        });
-        process.on("unhandledRejection", (reason, promise) => {
-            console.error("Unhandled Rejection at:", promise, "reason:", reason);
-            gracefulShutdown("unhandledRejection")
-        });
+	process.once('SIGINT', () => void shutdown('SIGINT'));
+	process.once('SIGTERM', () => void shutdown('SIGTERM'));
+	return server;
 };
