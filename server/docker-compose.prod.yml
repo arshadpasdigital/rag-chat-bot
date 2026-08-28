@@ -1,0 +1,49 @@
+services:
+  gateway:
+    environment:
+      NODE_ENV: production
+    command: ["bun", "run", "src/app.ts"]
+    volumes: []
+
+  task-service:
+    environment:
+      NODE_ENV: production
+    command: ["bun", "run", "src/app.ts"]
+    volumes: []
+
+  notification-service:
+    environment:
+      NODE_ENV: production
+      RABBITMQ_URL: "${RABBITMQ_URL:?RABBITMQ_URL must be set}"
+    command: ["bun", "run", "src/app.ts"]
+    volumes: []
+
+  auth-service:
+    env_file: []
+    environment:
+      NODE_ENV: production
+      PORT: 5053
+      GRPC_PORT: 50053
+      MONGODB_URI: "${MONGODB_URI:?MONGODB_URI must be set}"
+      RABBITMQ_URL: "${RABBITMQ_URL:?RABBITMQ_URL must be set}"
+      JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET must be set}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET must be set}"
+    command: ["bun", "run", "src/app.ts"]
+    volumes: []
+
+  mongo:
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_ROOT_USERNAME:?MONGO_ROOT_USERNAME must be set}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD:?MONGO_ROOT_PASSWORD must be set}"
+      MONGO_INITDB_DATABASE: "${MONGO_DATABASE:-sale-agent-db}"
+
+  mongo-express:
+    profiles: ["admin"]
+    ports: []
+
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER:?RABBITMQ_DEFAULT_USER must be set}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS:?RABBITMQ_DEFAULT_PASS must be set}"
+      RABBITMQ_DEFAULT_VHOST: "${RABBITMQ_DEFAULT_VHOST:-/}"
+    ports: []

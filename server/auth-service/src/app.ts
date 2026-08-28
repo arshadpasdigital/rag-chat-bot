@@ -1,26 +1,10 @@
 import 'dotenv/config';
-import express from 'express'
-import { expressServer } from './server';
+import { startServer } from './server';
+import { env } from './utils/env';
 
-const app = express();
-const port = Number(process.env.PORT ?? 3000)
-
-expressServer(app,port)
-
-interface Empty{}
-
-interface Task{
-    id:string,
-    title:string,
-    completed:boolean
-}
-
-interface TaskList{
-    tasks:Task[]
-}
-
-class TaskService{
-    GetTasks(props:Empty):TaskList { 
-        return {tasks:[{id:"",title:"",completed:false}]}
-    }
+if (import.meta.main) {
+	startServer(env.PORT).catch((error: unknown) => {
+		console.error('Unable to start auth-service', error);
+		process.exit(1);
+	});
 }

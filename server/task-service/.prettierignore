@@ -1,0 +1,65 @@
+    # ------------------------------------------------------------------------------
+# Dependencies and Package Managers
+# ------------------------------------------------------------------------------
+node_modules/
+.pnpm-store/
+.yarn/
+
+# ------------------------------------------------------------------------------
+# Build Outputs and Compiled Code
+# ------------------------------------------------------------------------------
+dist/
+build/
+out/
+.next/
+.nuxt/
+*.min.js
+*.min.css
+
+# ------------------------------------------------------------------------------
+# Logs and System Files
+# ------------------------------------------------------------------------------
+*.log
+.DS_Store
+Thumbs.db
+.pnp.*
+
+# ------------------------------------------------------------------------------
+# Testing and Coverage Reports
+# ------------------------------------------------------------------------------
+coverage/
+.nyc_output/
+
+# ------------------------------------------------------------------------------
+# IDEs, Editors, and Tooling Configs
+# ------------------------------------------------------------------------------
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# ------------------------------------------------------------------------------
+# Environment Variables and Local Locks (Optional to skip)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+! .env.example
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ------------------------------------------------------------------------------
+# Specific Formatting Exceptions
+# ------------------------------------------------------------------------------
+# Ignore all HTML files project-wide
+**/*.html
+
+# Ignore a specific file in a directory
+src/utils/generatedScript.js
+
+# Ignore everything in a folder EXCEPT a specific sub-file
+legacy-code/*
+!legacy-code/keep-this-formatted.js
