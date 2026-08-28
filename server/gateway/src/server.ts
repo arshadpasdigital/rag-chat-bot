@@ -1,4 +1,5 @@
 import express, {
+	Router,
 	type Express,
 	type NextFunction,
 	type Request,
@@ -9,9 +10,12 @@ import path from 'node:path';
 import { ApiResponse } from './utils/apiResponse';
 import { createServer } from 'node:http';
 import { handleExpressError } from './exceptions/handleExpress';
+import { apiV1 } from './routes/apiV1';
+import { env } from './utils/env';
 
-export const expressServer = (app: Express, PORT: number) => {
+export const expressServer = (app: Express, router:Router) => {
 	const server = createServer(app);
+	const PORT = env.PORT
 
 	app.use(
 		cors({
@@ -37,6 +41,9 @@ export const expressServer = (app: Express, PORT: number) => {
 		};
 		res.status(200).json(ApiResponse.success(health,200,'gateway-service health'));
 	});
+
+	// auth api roters
+	apiV1(app,router)
 
 	app.use(handleExpressError);
 	server.listen(PORT,()=>{

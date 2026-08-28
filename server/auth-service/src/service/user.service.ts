@@ -8,6 +8,7 @@ import type {
 	UserRecord,
 	UserRepository,
 } from '../repo/userRepo';
+import type { RabbitMQ } from '../lib/rabbitMq';
 
 export interface PublicUser {
 	id: string;
@@ -41,6 +42,7 @@ export interface UserService {
 export class DefaultUserService implements UserService {
 	constructor(
 		private readonly repository: UserRepository,
+		private readonly rabbitMq:RabbitMQ,
 		private readonly tokens: TokenService,
 		private readonly exposeOtp = false,
 		private readonly otpTtlMs = 10 * 60 * 1000,
@@ -60,6 +62,11 @@ export class DefaultUserService implements UserService {
 				optCode: verificationCode,
 				optCodeExpiresAt: expiresAt(this.otpTtlMs),
 			});
+			this.rabbitMq.publish('direct','user.email',{
+				userId:user.id,
+				email,
+				verificationCode
+			})
 			return {
 				user: toPublicUser(user),
 				...(this.exposeOtp ? { verificationCode } : {}),

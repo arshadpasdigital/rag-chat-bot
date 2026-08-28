@@ -5,7 +5,7 @@ import crypto from 'crypto'
 import path from 'path'
 import { env } from '../utils/env';
 
-export const PROTO_PATH = path.join('/app','proto','task.proto');
+export const PROTO_PATH = path.join('/app','proto','auth.proto');
 
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
     keepCase: true,

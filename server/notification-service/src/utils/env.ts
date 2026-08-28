@@ -9,7 +9,11 @@ const envSchema = z.object({
 		(value) => (value === '' ? undefined : value),
 		z.string().url().optional(),
 	),
-	RABBITMQ_URL:z.url()
+	RABBITMQ_URL:z.url(),
+	SMTP_HOST:z.string().describe("SMTP_HOST is required"),
+	SMTP_PORT:z.coerce.number().int().describe("SMTP_PORT is required"),
+	SMTP_USERNAME:z.string().describe("SMTP_USERNAME is required"),
+	SMTP_USER_PASSWORD:z.string().describe("SMTP_USER_PASSWORD is required")
 });
 
 export type Env = z.infer<typeof envSchema>;

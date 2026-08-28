@@ -1,11 +1,10 @@
-import 'dotenv/config';
 import express from 'express'
 import { expressServer } from './server';
 
 const app = express();
-const port = Number(process.env.PORT ?? 3000)
+const router = express.Router();
 
-expressServer(app,port)
+expressServer(app,router)
 
 interface Empty{}
 
