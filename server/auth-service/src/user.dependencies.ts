@@ -6,9 +6,11 @@ import { HmacTokenService, parseDuration } from './security/token';
 import { createAuthenticate } from './utils/authenticate';
 import { UserRouter } from './router/user.router';
 import rabbitMq from './lib/rabbitMq';
+import { AuthgRPCServices } from './grpc/gRPCServer';
 
 export class UserDependencies {
 	readonly router: UserRouter['router'];
+	readonly authGrpcServices: AuthgRPCServices;
 
 	constructor() {
 		const repository = new MongooseUserRepository();
@@ -21,5 +23,6 @@ export class UserDependencies {
 		const service = new DefaultUserService(repository,rabbitMq ,tokens, env.NODE_ENV !== 'production');
 		const controller = new UserController(service);
 		this.router = new UserRouter(controller, createAuthenticate(tokens, repository)).router;
+		this.authGrpcServices = new AuthgRPCServices(service)
 	}
 }

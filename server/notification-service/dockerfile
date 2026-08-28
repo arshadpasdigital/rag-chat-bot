@@ -13,7 +13,8 @@ RUN bun install --frozen-lockfile --production
 FROM base AS runtime
 
 ENV NODE_ENV=production
-ENV PORT=50052
+ENV PORT=5052
+ENV GRPC_PORT=50052
 
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY package.json bun.lock ./
@@ -21,6 +22,6 @@ COPY src ./src
 COPY proto ./proto
 
 
-EXPOSE 50052
+EXPOSE 5052 50052
 
 CMD ["bun", "run", "src/app.ts"]

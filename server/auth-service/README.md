@@ -34,7 +34,7 @@ docker compose -f ../docker-compose.yml -f ../docker-compose.prod.yml up --build
 
 ## Configuration
 
-The service reads `MONGODB_URI`, `RABBITMQ_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `PORT`, and `FRONTEND_APP_URL`. Development defaults are provided by `src/utils/env.ts`; use strong secrets in production.
+The service reads `MONGODB_URI`, `RABBITMQ_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `PORT`, `GRPC_PORT`, and `FRONTEND_APP_URL`. Development defaults are provided by `src/utils/env.ts`; use strong secrets in production. HTTP uses `PORT` (5053 by default) and gRPC uses `GRPC_PORT` (50053 by default).
 
 `RabbitMq.getInstance()` provides `publish()` through a publisher-confirm channel and `consume()` through a dedicated consumer channel. Consumer handlers must call `ack(message, channel)` after successful processing; rejected handlers are automatically nacked without requeue so a configured dead-letter policy can process them.
 

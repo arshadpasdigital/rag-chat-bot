@@ -46,7 +46,7 @@ export const startTaskServers = ()=>{
         GetTasks
     })
 
-    server.bindAsync(`0.0.0.0:${env.PORT}`,grpc.ServerCredentials.createInsecure(),
+    server.bindAsync(`0.0.0.0:${env.GRPC_PORT}`,grpc.ServerCredentials.createInsecure(),
     (error,port)=>{
         if(error){
             console.error(`Server failed to bind: ${error.message}`);
@@ -56,4 +56,3 @@ export const startTaskServers = ()=>{
     }
     )
 }
-

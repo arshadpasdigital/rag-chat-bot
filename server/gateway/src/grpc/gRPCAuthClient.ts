@@ -18,7 +18,7 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 const proto = grpc.loadPackageDefinition(packageDefinition) as any;
 
 const grpcAuthClient = new proto.AuthService(
-    `auth-service:${env.PORT}`,
+    `auth-service:${env.AUTH_SERVICE_GRPC_PORT}`,
     grpc.credentials.createInsecure(),
 )
 

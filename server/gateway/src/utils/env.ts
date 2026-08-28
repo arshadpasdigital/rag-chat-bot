@@ -5,6 +5,8 @@ const envSchema = z.object({
 		.enum(['development', 'test', 'production'])
 		.default('development'),
 	PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
+	GRPC_PORT: z.coerce.number().int().min(1).max(65_535).default(50050),
+	AUTH_SERVICE_GRPC_PORT: z.coerce.number().int().min(1).max(65_535).default(50053),
 	FRONTEND_APP_URL: z.preprocess(
 		(value) => (value === '' ? undefined : value),
 		z.string().url().optional(),

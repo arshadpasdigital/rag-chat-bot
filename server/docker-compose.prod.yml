@@ -23,6 +23,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 5053
+      GRPC_PORT: 50053
       MONGODB_URI: "${MONGODB_URI:?MONGODB_URI must be set}"
       RABBITMQ_URL: "${RABBITMQ_URL:?RABBITMQ_URL must be set}"
       JWT_ACCESS_SECRET: "${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET must be set}"

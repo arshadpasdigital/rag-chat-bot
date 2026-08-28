@@ -4,7 +4,8 @@ const envSchema = z.object({
 	NODE_ENV: z
 		.enum(['development', 'test', 'production'])
 		.default('development'),
-	PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
+	PORT: z.coerce.number().int().min(1).max(65_535).default(5053),
+	GRPC_PORT: z.coerce.number().int().min(1).max(65_535).default(50053),
 	MONGODB_URI: z.string().default('mongodb://root:example@localhost:27017/sale-agent-db?authSource=admin'),
 	RABBITMQ_URL: z.string().default('amqp://appuser:appsecret@localhost:5672/'),
 	JWT_ACCESS_SECRET: z.string().min(16).default('development-access-secret-change-me'),

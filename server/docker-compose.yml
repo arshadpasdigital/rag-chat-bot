@@ -12,6 +12,8 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
+      GRPC_PORT: 50050
+      AUTH_SERVICE_GRPC_PORT: 50053
     volumes:
       - ./gateway:/app
       - gateway_node_modules:/app/node_modules
@@ -40,10 +42,12 @@ services:
     init: true
     restart: unless-stopped
     expose:
+      - "5051"
       - "50051"
     environment:
       NODE_ENV: development
-      PORT: 50501
+      PORT: 5051
+      GRPC_PORT: 50051
     volumes:
       - ./task-service:/app
       - task_service_node_modules:/app/node_modules
@@ -55,7 +59,7 @@ services:
     networks:
       - micro-service-net
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:50051/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:5051/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -68,10 +72,12 @@ services:
     init: true
     restart: unless-stopped
     expose:
+      - "5052"
       - "50052"
     environment:
       NODE_ENV: development
-      PORT: 50052
+      PORT: 5052
+      GRPC_PORT: 50052
       RABBITMQ_URL: "amqp://${RABBITMQ_DEFAULT_USER:-appuser}:${RABBITMQ_DEFAULT_PASS:-appsecret}@rabbitmq:5672/"
     volumes:
       - ./notification-service:/app
@@ -102,10 +108,12 @@ services:
       - ./auth-service/.env
     environment:
       NODE_ENV: development
-      PORT: 50053
+      PORT: 5053
+      GRPC_PORT: 50053
       MONGODB_URI: "mongodb://${MONGO_ROOT_USERNAME:-root}:${MONGO_ROOT_PASSWORD:-example}@mongo:27017/${MONGO_DATABASE:-sale-agent-db}?authSource=admin"
       RABBITMQ_URL: "amqp://${RABBITMQ_DEFAULT_USER:-appuser}:${RABBITMQ_DEFAULT_PASS:-appsecret}@rabbitmq:5672/"
     expose:
+      - "5053"
       - "50053"
     volumes:
       - ./auth-service:/app

@@ -13,10 +13,10 @@ import { RabbitMq } from './lib/rabbitMq';
 import { handleExpressError } from './exceptions/handleExpress';
 import { ApiResponse } from './utils/apiResponse';
 import { env } from './utils/env';
+import { startAuthServers } from './grpc/gRPCServer';
 
-export const createApp = (): Express => {
+export const createApp = (userDependencies:UserDependencies): Express => {
 	const app = express();
-	const userDependencies = new UserDependencies();
 
 	app.disable('x-powered-by');
 	app.use(helmet());
@@ -49,6 +49,7 @@ export const createApp = (): Express => {
 
 export const startServer = async (port: number): Promise<Server> => {
 	const database = Database.getInstance();
+	const userDependencies = new UserDependencies();
 	const rabbitMq = RabbitMq.getInstance();
 	try {
 		await database.openConnection(env.MONGODB_URI);
@@ -57,7 +58,10 @@ export const startServer = async (port: number): Promise<Server> => {
 		await Promise.allSettled([database.closeConnection(), rabbitMq.closeConnection()]);
 		throw error;
 	}
-	const server = createServer(createApp());
+
+	startAuthServers(userDependencies.authGrpcServices);
+	
+	const server = createServer(createApp(userDependencies));
 	server.listen(port, () => console.log(`The Auth server is running at port => ${port}`));
 
 	const shutdown = async (signal: string) => {

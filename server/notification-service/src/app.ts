@@ -3,7 +3,7 @@ import express from 'express'
 import { expressServer } from './server';
 
 const app = express();
-const port = Number(process.env.PORT ?? 3000)
+const port = Number(process.env.PORT ?? 5052)
 
 expressServer(app,port)
 
