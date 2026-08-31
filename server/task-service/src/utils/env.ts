@@ -10,6 +10,8 @@ const envSchema = z.object({
 		(value) => (value === '' ? undefined : value),
 		z.string().url().optional(),
 	),
+	OPENAI_API_KEY:z.string().describe("open ai key is required"),
+	FIREWORKS_API_KEY:z.string().describe('FIREWORKS API key is required')
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -170,6 +170,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:4.3.5-management-alpine
+    container_name: rabbitmq
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-appuser}
@@ -188,6 +189,30 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+  
+  redis-cache:
+    image: redis:8.8.2-alpine
+    container_name: redis-cache
+    environment:
+      - REDIS_ARGS=--appendonly yes --save 60 1 --maxmemory 2gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_cache_data:/data
+    networks:
+      - micro-service-net
+    restart: unless-stopped
+
+  pg-vector-db:
+    image: pgvector/pgvector:pg18
+    container_name: pg-vector-db
+    restart: always
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+    networks:
+      - micro-service-net
+    volumes:
+      - postgress_db:/var/lib/postgressql/data
 
 volumes:
   auth_service_node_modules:
@@ -196,6 +221,8 @@ volumes:
   task_service_node_modules:
   mongo-data:
   rabbitmq_data:
+  postgress_db:
+  redis_cache_data:
 
 networks:
   micro-service-net:

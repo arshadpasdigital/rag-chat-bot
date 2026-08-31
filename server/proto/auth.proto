@@ -6,6 +6,7 @@ package auth;
 service AuthService{
     rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse); 
     rpc VerifyUserEmail(VerifyUserEmailRequest) returns (VerifyUserEmailResponse);
+    rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
 }
 
 message RegisterUserRequest{
@@ -32,4 +33,24 @@ message User{
     string id =1;
     string name = 2;
     string email = 3;
+}
+
+message Token {
+    string accessToken = 1;
+    string refreshToken = 2;
+}
+
+message UserData{
+    Token token = 1;
+    User user = 2;
+    bool isLoggedIn = 3;
+}
+
+message LoginUserRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginUserResponse{
+    UserData userData = 1 ;
 }
