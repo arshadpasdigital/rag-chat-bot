@@ -38,6 +38,38 @@ export function registerUser(req:Request,res:Response,next:NextFunction) {
     }
 }
 
+export function verifiedEmailUser(req:Request,res:Response,next:NextFunction) {
+    try {
+        grpcAuthClient.VerifyUserEmail({
+            email:req.body.email,
+            otp_code:req.body.otp_code
+        },(err:any,response:any)=>{
+            if(err){
+                return res.status(500).json(ApiResponse.error(err,500,err.message))
+            }
+            return res.json(response)
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export function loginUser(req:Request,res:Response,next:NextFunction) {
+    try {
+        grpcAuthClient.LoginUser({
+            email:req.body.email,
+            password:req.body.password
+        },(err:any,response:any)=>{
+            if(err){
+                return res.status(500).json(ApiResponse.error(err,500,err.message))
+            }
+            return res.json(response)
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 // export function allTask() {
 //     return new Promise((resolve,reject)=>{
 //         client.GetTasks({},(err:any,response:any)=>{

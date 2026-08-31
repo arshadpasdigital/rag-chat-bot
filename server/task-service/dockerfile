@@ -6,7 +6,7 @@ WORKDIR /app
 # the dependency cache.
 FROM base AS dependencies
 
-COPY package.json bun.lock ./
+COPY task-service/package.json task-service/bun.lock ./
 RUN bun install --frozen-lockfile --production
 
 # The runtime image contains only production dependencies and application files.
@@ -17,8 +17,8 @@ ENV PORT=5051
 ENV GRPC_PORT=50051
 
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY package.json bun.lock ./
-COPY src ./src
+COPY task-service/package.json task-service/bun.lock ./
+COPY task-service/src ./src
 COPY proto ./proto
 
 EXPOSE 5051 50051

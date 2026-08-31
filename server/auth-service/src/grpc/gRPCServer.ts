@@ -55,6 +55,22 @@ export class AuthgRPCServices {
         },null)
         }
     }
+
+    async loginUsergRPC(call:any, callback:any){
+        try {
+            const response = await this.authService.login({
+                email:call.request.email,
+                password:call.request.password
+            });
+            callback(null, response);
+    } catch (error:unknown) {
+        const errMessage = error instanceof Error ? error.message : "User login Failed."
+        callback({
+            message: errMessage,
+            code:grpc.status.INVALID_ARGUMENT
+        },null)
+        }
+    }
 }
 
 
@@ -64,6 +80,7 @@ export const startAuthServers = (authGrpcServices: AuthgRPCServices)=>{
     server.addService(auths.AuthService.service, {
 		RegisterUser: authGrpcServices.RegisterUsergRPC,
 		VerifyUserEmail: authGrpcServices.verifyUserEmailgRPC,
+        loginUser:authGrpcServices.loginUsergRPC
 	});
 
     server.bindAsync(`0.0.0.0:${env.GRPC_PORT}`,grpc.ServerCredentials.createInsecure(),
