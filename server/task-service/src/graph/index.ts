@@ -11,7 +11,8 @@ import { memoryAgentNode } from "./node/memoryAgentNode";
 
 export const MessagesState = new StateSchema({
   messages: MessagesValue,
-  userId:z.string().default("").describe("userId is requried")
+  userId:z.string().default("").describe("userId is requried"),
+  threadId:z.string().default("")
 });
 
 const workflow = new StateGraph(MessagesState)

@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package chathistory;
+
+import "google/protobuf/struct.proto";
+
+service ChatHistoryService{
+    rpc GetChatHistory(chatHistoryRequest) returns (chatHistoryResponse); 
+}
+
+message chatHistoryRequest{
+    string userId = 1;
+    string threadId = 2;
+}
+
+message chatHistoryResponse{
+    string userId = 1;
+    string threadId = 2;
+
+    repeated Message messages = 3;
+    string createdAt = 4;
+    string updatedAt = 5;
+}
+
+message HITLAction{
+    optional string id = 1;
+    optional string interruptId = 2;
+    optional string tool_name = 3;
+    optional string tool_description = 4;
+    optional google.protobuf.Struct args = 5;
+}
+
+message HITL{
+    bool status = 1;
+    optional HITLAction action = 2;
+}
+
+enum MessageRole {
+    MESSAGE_ROLE_UNSPECIFIED = 0;
+    user = 1;
+    ai = 2;
+}
+
+message Message{
+    string id = 1;
+    string userId = 2;
+    string threadId = 3;
+    string content = 4;
+    optional string thinking = 5;
+    optional HITL hitl = 6;
+    MessageRole role = 7;
+}

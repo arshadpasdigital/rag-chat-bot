@@ -48,7 +48,7 @@ export function getAllTask(req:Request,res:Response,next:NextFunction) {
 
 export function postChat(req:Request,res:Response,next:NextFunction){
     try {
-        const {message, userId} = req.body;
+        const {message,threadId, userId} = req.body;
 
         res.setHeader('Content-Type','text/event-stream')
         res.setHeader('Cache-Control','no-cache')

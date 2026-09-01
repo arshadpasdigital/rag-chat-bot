@@ -35,11 +35,11 @@ const randomTask = ()=>{
 }
 
 async function Chat(call:grpc.ServerWritableStream<any,any>) {
-    const {userId,message} = call.request;
+    const {userId,message,threadId} = call.request;
 
     const graphStream = await graph.stream({
         messages:[{role:"user",content:message}],
-        userId
+        userId, threadId
     },{
         streamMode:"custom",
         subgraphs:true,

@@ -10,6 +10,7 @@ service ChatService{
 message chatRequest{
     string userId = 1;
     string message = 2;
+    string threadId = 3;
 }
 
 message chatChunk{
