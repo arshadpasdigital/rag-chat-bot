@@ -4,10 +4,14 @@ import * as protoLoader from '@grpc/proto-loader'
 import crypto from 'crypto'
 import path from 'path'
 import { env } from '../utils/env';
+import { graph } from '../graph';
 
-export const PROTO_PATH = path.join('/app','proto','task.proto');
+export const PROTO_DIR = path.join('/app','proto');
 
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+const packageDefinition = protoLoader.loadSync([
+    path.join(PROTO_DIR, 'task.proto'),
+    path.join(PROTO_DIR, 'chat.proto')
+], {
     keepCase: true,
     longs:String,
     enums:String,
@@ -17,7 +21,8 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const proto = grpc.loadPackageDefinition(packageDefinition) as any;
 
-const tasks = proto.tasks;
+const tasksProto = proto.tasks;
+const chatProto = proto.chat;
 
 const randomTask = ()=>{
     const titles = ["learning docker","complete", 'adadfasdf','adsfasdfasdf'];
@@ -27,6 +32,54 @@ const randomTask = ()=>{
         title:titles[Math.floor(Math.random()*titles.length)],
         completed: Math.random() > 0.5
     }
+}
+
+async function Chat(call:grpc.ServerWritableStream<any,any>) {
+    const {userId,message} = call.request;
+
+    const graphStream = await graph.stream({
+        messages:[{role:"user",content:message}],
+        userId
+    },{
+        streamMode:"custom",
+        subgraphs:true,
+        recursionLimit:400,
+        configurable:{
+            userId
+        }
+    })
+
+    let isThinking = false;
+    for await (const [_,chunk] of graphStream) {
+        const content = (chunk as any)?.content;
+        if(!content) continue;
+
+        const parts = content.split(/(<think>|<\/think>)/);
+        for (const part of parts) {
+            if(part ==="<think>"){
+                isThinking=true;
+                continue;
+            }
+
+            if(part ==="</think>"){
+                isThinking=false;
+                continue;
+            }
+
+            if(!part) continue;
+
+            call.write({
+                type: isThinking ? 'THINKING':'CONTENT',
+                content:part
+            })
+        }
+    }
+    call.write({
+        type:'DONE',
+        content:''
+    })
+
+    call.end();
 }
 
 async function GetTasks(call:any,callback:any) {
@@ -42,8 +95,13 @@ async function GetTasks(call:any,callback:any) {
 
 export const startTaskServers = ()=>{
     const server = new grpc.Server();
-    server.addService(tasks.TaskService.service,{
+
+    server.addService(tasksProto.TaskService.service,{
         GetTasks
+    })
+
+    server.addService(chatProto.TaskService.service,{
+        Chat
     })
 
     server.bindAsync(`0.0.0.0:${env.GRPC_PORT}`,grpc.ServerCredentials.createInsecure(),
@@ -56,3 +114,4 @@ export const startTaskServers = ()=>{
     }
     )
 }
+

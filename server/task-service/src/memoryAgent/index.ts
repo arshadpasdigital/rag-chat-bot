@@ -2,8 +2,12 @@ import { createAgent, HumanMessage } from "langchain";
 import { env } from "../utils/env";
 import { MEMORY_BASE_SYSTEM_PROMPT } from "./prompts/memo-prompt";
 
+interface MemoAgentType{
+    model?:string,
+    userId:string
+}
 
-const memoAgent = async ({ model = "", }) => {
+export const memoAgent = async ({ model = "",userId }:MemoAgentType) => {
     const agent = createAgent({
         model,
         tools: [],
@@ -43,10 +47,8 @@ const memoAgent = async ({ model = "", }) => {
                     })
                 }
             }
-
-            return { fullContext }
-
         }
+        return { fullContext }
     }
 
 
