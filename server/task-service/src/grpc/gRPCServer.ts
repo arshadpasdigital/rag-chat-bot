@@ -5,6 +5,7 @@ import { resolveProtoDirectory } from '../clients/grpc.client';
 import type { TaskGrpcServices } from '../services/taskGrpc.service';
 import type { ChatGrpcServices } from '../services/chatGrpc.service';
 import type { AgentGrpcServices } from '../services/agentGrpc.service';
+import type { CustomerGrpcServices } from '../services/customerGrpc.service';
 
 export const PROTO_DIR = resolveProtoDirectory();
 
@@ -13,6 +14,7 @@ const packageDefinition = protoLoader.loadSync(
 		path.join(PROTO_DIR, 'task.proto'),
 		path.join(PROTO_DIR, 'chat.proto'),
 		path.join(PROTO_DIR, 'agent.proto'),
+		path.join(PROTO_DIR, 'customer.proto'),
 	],
 	{
 		keepCase: true,
@@ -28,11 +30,13 @@ const proto = grpc.loadPackageDefinition(packageDefinition) as any;
 const tasksProto = proto.tasks;
 const chatProto = proto.chat;
 const agentProto = proto.agents;
+const customerProto = proto.customer;
 
 export interface TaskGrpcServicesBundle {
 	tasks: TaskGrpcServices;
 	chat: ChatGrpcServices;
 	agent: AgentGrpcServices;
+	customer: CustomerGrpcServices
 }
 
 export const startTaskServers = (
@@ -52,6 +56,9 @@ export const startTaskServers = (
 		GetAgent: services.agent.GetAgent,
 		GetAgents: services.agent.GetAgents,
 		DeleteAgent: services.agent.DeleteAgent,
+	});
+	server.addService(customerProto.CustomerService.service, {
+		GetCustomer: services.customer.GetCustomer,
 	});
 
 

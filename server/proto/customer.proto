@@ -10,10 +10,37 @@ message GetCustomerRequest(){
     string userId = 1;
 }
 
+message Customer(){
+    string _id = 1;
+    string firstName = 2;
+    string lastName = 3;
+    string email = 4;
+    string userId = 5;
+}
+
 message GetCustomerResponse(){
     string id = 1;
     string firstName = 2;
     string lastName = 3;
     string email = 4;
     string userId = 5;
+}
+
+message CustomerPagination {
+  int32 page = 1;
+  int32 limit = 2;
+  int64 total = 3;
+  int32 totalPages = 4;
+  bool hasNext = 5;
+  bool hasPrev = 6;
+}
+
+message GetCustomerResponse {
+  string message = 1;
+  Customer customer = 2;
+}
+
+message GetCustomersResponse {
+  repeated Customer customer = 1;
+  CustomerPagination pagination = 2;
 }

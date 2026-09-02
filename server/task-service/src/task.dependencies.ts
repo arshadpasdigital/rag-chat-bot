@@ -18,6 +18,7 @@ import { TaskGrpcServices } from './services/taskGrpc.service';
 import { ChatGrpcServices } from './services/chatGrpc.service';
 import { AgentGrpcServices } from './services/agentGrpc.service';
 import { DefaultAgentService } from './services/agent.service';
+import { CustomerGrpcServices } from './services/customerGrpc.service';
 
 
 /** The single composition root for task-service dependencies. */
@@ -47,6 +48,7 @@ export class TaskDependencies {
 			tasks: new TaskGrpcServices(this.taskService),
 			chat: new ChatGrpcServices(createGraph(this.chatHistoryService)),
 			agent: new AgentGrpcServices(this.agentService),
+			customer: new CustomerGrpcServices(this.customerService)
 		};
 	}
 
