@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package agents;
+
+service AgentService {
+  rpc CreateAgent(CreateAgentRequest) returns (CreateAgentResponse);
+  rpc UpdateAgent(UpdateAgentRequest) returns (UpdateAgentResponse);
+  rpc GetAgent(GetAgentRequest) returns (GetAgentResponse);
+  rpc GetAgents(GetAgentsRequest) returns (GetAgentsResponse);
+  rpc DeleteAgent(DeleteAgentRequest) returns (DeleteAgentResponse);
+}
+
+message Agent {
+  string id = 1;
+  string name = 2;
+  string goal = 3;
+  string persona = 4;
+  string userId = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+}
+
+message Pagination {
+  int32 page = 1;
+  int32 limit = 2;
+  int64 total = 3;
+  int32 totalPages = 4;
+  bool hasNext = 5;
+  bool hasPrev = 6;
+}
+
+message CreateAgentRequest {
+  string name = 1;
+  string goal = 2;
+  string persona = 3;
+  string userId = 4;
+}
+
+message CreateAgentResponse {
+  string message = 1;
+  Agent agent = 2;
+}
+
+message UpdateAgentRequest {
+  string agentId = 1;
+  string userId = 2;
+  optional string name = 3;
+  optional string goal = 4;
+  optional string persona = 5;
+}
+
+message UpdateAgentResponse {
+  string message = 1;
+  Agent agent = 2;
+}
+
+message GetAgentRequest {
+  string agentId = 1;
+  string userId = 2;
+}
+
+message GetAgentResponse {
+  string message = 1;
+  Agent agent = 2;
+}
+
+message GetAgentsRequest {
+  string userId = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message GetAgentsResponse {
+  repeated Agent agents = 1;
+  Pagination pagination = 2;
+}
+
+message DeleteAgentRequest {
+  string agentId = 1;
+  string userId = 2;
+}
+
+message DeleteAgentResponse {
+  string message = 1;
+}

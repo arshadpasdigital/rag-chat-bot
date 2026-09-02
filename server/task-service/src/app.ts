@@ -1,26 +1,22 @@
 import 'dotenv/config';
-import express from 'express'
+import express from 'express';
+import { startTaskServers } from './grpc/gRPCServer';
+import { TaskDependencies } from './task.dependencies';
+import { env } from './utils/env';
 import { expressServer } from './server';
+import { database } from './lib/database';
 
+const dependencies = new TaskDependencies();
 const app = express();
-const port = Number(process.env.PORT ?? 5051)
 
-expressServer(app,port)
+await database.openConnection();
+expressServer(app, env.PORT);
+startTaskServers(dependencies.grpcServices, env.GRPC_PORT);
 
-interface Empty{}
+const shutdown = async () => {
+	dependencies.close();
+	await database.closeConnection();
+};
 
-interface Task{
-    id:string,
-    title:string,
-    completed:boolean
-}
-
-interface TaskList{
-    tasks:Task[]
-}
-
-class TaskService{
-    GetTasks(props:Empty):TaskList { 
-        return {tasks:[{id:"",title:"",completed:false}]}
-    }
-}
+process.once('SIGINT', shutdown);
+process.once('SIGTERM', shutdown);

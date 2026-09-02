@@ -1,34 +1,32 @@
 import {
-  StateGraph,
-  StateSchema,
-  MessagesValue,
-  ReducedValue,
-  START,
-  END,
-  type GraphNode,
-  Command,
-} from "@langchain/langgraph";
-import { SystemMessage } from "@langchain/core/messages";
-import { AIMessage, ToolMessage } from "@langchain/core/messages";
-import { LLM } from "../../llm/LLM";
-import { memoAgent } from "../../memoryAgent";
-import { env } from "../../utils/env";
-import type { MessagesState } from "..";
-import { ChatHistoryService } from "../../services/chatHistory.service";
+	END,
+	Command,
+	type GraphNode,
+} from '@langchain/langgraph';
+import { AIMessage } from '@langchain/core/messages';
+import { memoAgent } from '../../memoryAgent';
+import type { ChatHistoryService } from '../../services/chatHistory.service';
+import { MessagesState } from '../state';
 
+export const createMemoryAgentNode = (
+	chatHistoryService: ChatHistoryService,
+): GraphNode<typeof MessagesState> => async (state, config: any) => {
+	const { userId, threadId } = state;
+	const last = state.messages
+		.filter((message: any) => message._getType() === 'human')
+		.slice(-1)[0];
 
-export const memoryAgentNode:GraphNode<typeof MessagesState>  = async(state,config:any)=>{
-    const {userId, threadId} = state;
-    const last = state?.messages?.filter((m:any)=>m._getType() === "human")
-        .slice(-1)[0];
+	const { streamAgent } = await memoAgent({ model: 'gpt-5.5', userId });
+	const { fullContext } = await streamAgent(last?.content as string, config);
+	await chatHistoryService.insertMessage(
+		userId,
+		threadId,
+		last?.content as string,
+		'user',
+	);
 
-    const llmInstance = LLM.getInstance({});
-    const chatHistoryInstance = ChatHistoryService.getInstance();
-    const {streamAgent} = await memoAgent({ model:'gpt-5.5',userId })
-    const { fullContext } = await streamAgent(last?.content as string, config);
-    await chatHistoryInstance.insertMessage(userId,threadId,last?.content as string,"user");
-    return new Command({
-      update:{messages:[new AIMessage(fullContext)],nextNode:END},
-      goto:END
-    })
-}   
+	return new Command({
+		update: { messages: [new AIMessage(fullContext)], nextNode: END },
+		goto: END,
+	});
+};

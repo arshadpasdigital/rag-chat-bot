@@ -8,6 +8,7 @@ services:
   task-service:
     environment:
       NODE_ENV: production
+      MONGODB_URI: "${MONGODB_URI:?MONGODB_URI must be set}"
     command: ["bun", "run", "src/app.ts"]
     volumes: []
 

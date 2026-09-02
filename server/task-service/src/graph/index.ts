@@ -1,23 +1,19 @@
 import {
-  StateGraph,
-  StateSchema,
-  MessagesValue,
-  ReducedValue,
-  START,
-  END,
-} from "@langchain/langgraph";
-import { z } from "zod/v4";
-import { memoryAgentNode } from "./node/memoryAgentNode";
+	END,
+	START,
+	StateGraph,
+} from '@langchain/langgraph';
+import type { ChatHistoryService } from '../services/chatHistory.service';
+import { createMemoryAgentNode } from './node/memoryAgentNode';
+import { MessagesState } from './state';
 
-export const MessagesState = new StateSchema({
-  messages: MessagesValue,
-  userId:z.string().default("").describe("userId is requried"),
-  threadId:z.string().default("")
-});
+export { MessagesState } from './state';
 
-const workflow = new StateGraph(MessagesState)
-  .addNode("memoryAgent", memoryAgentNode)
-  .addEdge(START, "memoryAgent")
-  .addEdge("memoryAgent",END);
+export const createGraph = (chatHistoryService: ChatHistoryService) => {
+	const workflow = new StateGraph(MessagesState)
+		.addNode('memoryAgent', createMemoryAgentNode(chatHistoryService))
+		.addEdge(START, 'memoryAgent')
+		.addEdge('memoryAgent', END);
 
-export const graph = workflow.compile()
+	return workflow.compile();
+};

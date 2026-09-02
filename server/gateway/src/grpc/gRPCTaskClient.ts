@@ -8,8 +8,9 @@ import { ApiResponse } from '../utils/apiResponse';
 export const PROTO_DIR = path.join('/app','proto');
 
 const packageDefinition = protoLoader.loadSync([
-    path.join(PROTO_DIR,'tasks.proto'),
-    path.join(PROTO_DIR,'chat.proto')
+    path.join(PROTO_DIR,'task.proto'),
+    path.join(PROTO_DIR,'chat.proto'),
+    path.join(PROTO_DIR,'agent.proto'),
 ], {
     keepCase: true,
     longs:String,
@@ -22,13 +23,19 @@ const grpcObject = grpc.loadPackageDefinition(packageDefinition) as any;
 
 const taskProto = grpcObject.tasks;
 const chatProto = grpcObject.chat;
+const agentProto = grpcObject.agent;
 
-const grpcTaskClient = new taskProto.TaskService(
+export const grpcTaskClient = new taskProto.TaskService(
     `task-service:${env.TASK_SERVICE_GRPC_PORT}`,
     grpc.credentials.createInsecure(),
 )
 
-const grpcChatClient = new chatProto.TaskService(
+export const grpcChatClient = new chatProto.ChatService(
+    `task-service:${env.TASK_SERVICE_GRPC_PORT}`,
+    grpc.credentials.createInsecure(),
+)
+
+export const grpcAgentClient = new agentProto.ChatService(
     `task-service:${env.TASK_SERVICE_GRPC_PORT}`,
     grpc.credentials.createInsecure(),
 )

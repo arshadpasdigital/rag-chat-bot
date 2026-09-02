@@ -6,6 +6,9 @@ const envSchema = z.object({
 		.default('development'),
 	PORT: z.coerce.number().int().min(1).max(65_535).default(5051),
 	GRPC_PORT: z.coerce.number().int().min(1).max(65_535).default(50051),
+	MONGODB_URI: z.string().default(
+		'mongodb://root:example@localhost:27017/sale-agent-db?authSource=admin',
+	),
 	FRONTEND_APP_URL: z.preprocess(
 		(value) => (value === '' ? undefined : value),
 		z.string().url().optional(),
